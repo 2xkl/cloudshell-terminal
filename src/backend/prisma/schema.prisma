@@ -1,0 +1,113 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// RBAC Models
+
+model User {
+  id           String     @id @default(uuid())
+  email        String     @unique
+  passwordHash String
+  name         String
+  roleId       String
+  role         Role       @relation(fields: [roleId], references: [id])
+  terminals    Terminal[]
+  snapshots    Snapshot[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@map("users")
+}
+
+model Role {
+  id          String           @id @default(uuid())
+  name        String           @unique
+  description String?
+  permissions RolePermission[]
+  users       User[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String           @id @default(uuid())
+  name        String           @unique
+  resource    String
+  action      String
+  description String?
+  roles       RolePermission[]
+  createdAt   DateTime         @default(now())
+
+  @@unique([resource, action])
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+// Terminal Models
+
+model Terminal {
+  id          String            @id @default(uuid())
+  name        String
+  userId      String
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status      TerminalStatus    @default(STOPPED)
+  environment Json              @default("{}")
+  workingDir  String            @default("/home/user")
+  fileSystem  Json              @default("{}")
+  commands    TerminalCommand[]
+  snapshots   Snapshot[]
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@map("terminals")
+}
+
+enum TerminalStatus {
+  RUNNING
+  STOPPED
+  SUSPENDED
+}
+
+model TerminalCommand {
+  id         String   @id @default(uuid())
+  terminalId String
+  terminal   Terminal @relation(fields: [terminalId], references: [id], onDelete: Cascade)
+  command    String
+  output     String
+  exitCode   Int      @default(0)
+  executedAt DateTime @default(now())
+
+  @@map("terminal_commands")
+}
+
+// Snapshot Models
+
+model Snapshot {
+  id         String   @id @default(uuid())
+  name       String
+  terminalId String
+  terminal   Terminal @relation(fields: [terminalId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  state      Json
+  metadata   Json     @default("{}")
+  createdAt  DateTime @default(now())
+
+  @@map("snapshots")
+}

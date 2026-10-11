@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(npx prisma *)",
+      "Bash(docker *)",
+      "Bash(curl *)",
+      "Bash(git status)",
+      "Bash(git diff)",
+      "Bash(git log *)",
+      "Bash(ls *)",
+      "Read(*)",
+      "Write(src/**)",
+      "Edit(src/**)"
+    ],
+    "deny": [
+      "Bash(rm -rf /)",
+      "Bash(git push --force)",
+      "Bash(git reset --hard)",
+      "Write(.env)",
+      "Write(*.key)",
+      "Write(*.pem)"
+    ]
+  },
+  "hooks": {
+    "postToolUse": {
+      "Edit": "cd src/backend && npx tsc --noEmit 2>/dev/null || true"
+    },
+    "stop": "cd src/backend && npx tsc --noEmit"
+  }
+}
