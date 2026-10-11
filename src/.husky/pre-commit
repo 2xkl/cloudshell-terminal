@@ -1,0 +1,19 @@
+#!/bin/sh
+
+echo "Running pre-commit checks..."
+
+# TypeScript check
+echo "TypeScript: Backend..."
+cd backend && npx tsc --noEmit || exit 1
+
+echo "TypeScript: Frontend..."
+cd ../frontend && npx tsc --noEmit || exit 1
+
+# Tests
+echo "Tests: Backend..."
+cd ../backend && npm test || exit 1
+
+echo "Tests: Frontend..."
+cd ../frontend && npm test || exit 1
+
+echo "All pre-commit checks passed!"

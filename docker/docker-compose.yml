@@ -1,0 +1,99 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: cloudshell-postgres
+    environment:
+      POSTGRES_USER: cloudshell
+      POSTGRES_PASSWORD: cloudshell_secret
+      POSTGRES_DB: cloudshell
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - cloudshell-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cloudshell"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: cloudshell-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - cloudshell-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ../src/backend
+      dockerfile: Dockerfile
+    container_name: cloudshell-backend
+    ports:
+      - "4000:4000"
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://cloudshell:cloudshell_secret@postgres:5432/cloudshell
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: super_secret_jwt_key_change_in_production
+      PORT: 4000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - cloudshell-network
+    volumes:
+      - ../src/backend:/app
+      - /app/node_modules
+
+  frontend:
+    build:
+      context: ../src/frontend
+      dockerfile: Dockerfile
+    container_name: cloudshell-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      VITE_API_URL: http://localhost:4000
+    depends_on:
+      - backend
+    networks:
+      - cloudshell-network
+    volumes:
+      - ../src/frontend:/app
+      - /app/node_modules
+
+  build-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile.rhel-agent
+    container_name: cloudshell-build-agent
+    environment:
+      AGENT_NAME: rhel-agent-01
+      BACKEND_URL: http://backend:4000
+    depends_on:
+      - backend
+    networks:
+      - cloudshell-network
+    privileged: true
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  cloudshell-network:
+    driver: bridge
