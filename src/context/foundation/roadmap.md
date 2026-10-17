@@ -50,11 +50,18 @@
 - [x] Health check script
 
 ### Phase 8: Production Readiness (TODO)
-- [ ] CI/CD pipeline
+- [x] CI/CD pipeline
 - [ ] Security audit
 - [ ] Performance optimization
 - [ ] Monitoring and logging
 - [ ] Documentation
+
+### Phase 9: AI Native Teamwork (TODO)
+- [ ] Claude Code Action - AI code review w GitHub Actions
+- [ ] Team Agent SDK - ToolLoopAgent z Vercel AI SDK
+- [ ] promptfoo - testowanie agentow i promptow
+- [ ] Shared AI Registry - dystrybucja skilli jako npm packages
+- [ ] Async/Remote Agents - delegowanie zadan do zdalnych agentow
 
 ## Feature Dependencies
 
@@ -66,6 +73,7 @@ Infrastructure
                    └── Frontend UI
                         └── Testing
                              └── Production
+                                  └── AI Native Teamwork
 ```
 
 ## Risk Assessment
@@ -76,6 +84,9 @@ Infrastructure
 | Terminal command injection | High | Input sanitization, sandbox |
 | RBAC bypass | High | Integration tests, code review |
 | Data loss | Medium | Snapshots, backups |
+| AI Agent hallucinations | Medium | promptfoo testing, human review |
+| API cost overrun | Medium | maxBudgetUsd, token limits |
+| Skill injection | High | Bundle signing, API allowlisting |
 
 ## Success Metrics
 
@@ -83,6 +94,9 @@ Infrastructure
 - [x] User can create and manage terminals
 - [x] User can execute emulated commands
 - [x] User can save and restore snapshots
-- [x] All 33 unit tests pass
+- [x] All 78 unit tests pass
 - [ ] API integration tests coverage > 80%
 - [ ] E2E tests for critical paths
+- [ ] AI code review on every PR
+- [ ] promptfoo eval score > 90%
+- [ ] Shared skills distributed via npm
