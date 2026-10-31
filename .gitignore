@@ -1,6 +1,7 @@
 # Course materials - not part of project
 docs_przeprogramowani/
 PROJEKT/
+wymagania/
 /CLAUDE.md
 
 # Dependencies - installed in CI containers
