@@ -1,7 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
-import { prisma } from '../index.js';
+import { prisma } from '../db.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { authenticate, requirePermission, AuthRequest } from '../middleware/auth.js';
 

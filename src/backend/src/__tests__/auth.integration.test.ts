@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
 import { app } from '../app.js';
-import { prisma } from '../index.js';
+import { prisma } from '../db.js';
 import { setupTestDatabase, cleanupTestDatabase } from './setup.js';
 
 describe('Auth API Integration Tests', () => {

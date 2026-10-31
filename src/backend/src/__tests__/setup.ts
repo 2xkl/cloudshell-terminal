@@ -1,4 +1,4 @@
-import { prisma } from '../index.js';
+import { prisma } from '../db.js';
 import bcrypt from 'bcryptjs';
 
 export async function setupTestDatabase() {
@@ -32,7 +32,7 @@ export async function setupTestDatabase() {
     resources.flatMap((resource) =>
       actions.map((action) =>
         prisma.permission.create({
-          data: { resource, action },
+          data: { name: `${resource}:${action}`, resource, action },
         })
       )
     )
