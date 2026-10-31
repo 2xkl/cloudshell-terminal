@@ -44,6 +44,30 @@ const DEFAULT_ENVIRONMENT: Record<string, string> = {
   LANG: 'en_US.UTF-8',
 };
 
+/**
+ * Validates and normalizes a filesystem path
+ * @param path - The path to validate
+ * @returns Normalized path or null if invalid
+ */
+export function normalizePath(path: string): string | null {
+  if (!path || typeof path !== 'string') {
+    return null;
+  }
+
+  // Remove trailing slashes (except for root)
+  let normalized = path.replace(/\/+$/, '') || '/';
+
+  // Handle double slashes
+  normalized = normalized.replace(/\/+/g, '/');
+
+  // Must start with /
+  if (!normalized.startsWith('/')) {
+    return null;
+  }
+
+  return normalized;
+}
+
 export function getDefaultState(): TerminalState {
   return {
     workingDir: '/home/user',
