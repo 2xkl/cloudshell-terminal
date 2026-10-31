@@ -1,0 +1,187 @@
+name: AI Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main, master, develop]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  ai-review:
+    name: AI Code Review
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v44
+        with:
+          files: |
+            **/*.ts
+            **/*.tsx
+            **/*.js
+            **/*.jsx
+
+      - name: Setup Node.js
+        if: steps.changed-files.outputs.any_changed == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Get PR diff
+        if: steps.changed-files.outputs.any_changed == 'true'
+        id: diff
+        run: |
+          # Get the diff for changed files
+          git diff origin/${{ github.base_ref }}..HEAD -- ${{ steps.changed-files.outputs.all_changed_files }} > diff.txt
+          echo "diff_file=diff.txt" >> $GITHUB_OUTPUT
+
+      - name: AI Code Review
+        if: steps.changed-files.outputs.any_changed == 'true'
+        uses: actions/github-script@v7
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+
+            // Read the diff
+            const diffContent = fs.readFileSync('diff.txt', 'utf-8');
+
+            if (!diffContent.trim()) {
+              console.log('No code changes to review');
+              return;
+            }
+
+            // Review criteria
+            const REVIEW_CRITERIA = `
+            Review this code change against the following criteria:
+
+            1. **Security**: Check for potential security vulnerabilities (XSS, injection, exposed secrets)
+            2. **Type Safety**: Ensure proper TypeScript types, no 'any' abuse
+            3. **Error Handling**: Verify proper error handling and edge cases
+            4. **Performance**: Identify potential performance issues
+            5. **Code Quality**: Check for clean code, DRY principles, proper naming
+            6. **Testing**: Assess if changes have appropriate test coverage
+
+            For each issue found, provide:
+            - File and line reference
+            - Severity (critical/warning/suggestion)
+            - Brief description
+            - Suggested fix
+
+            Format response as JSON:
+            {
+              "summary": "Brief overall assessment",
+              "verdict": "approve" | "request_changes" | "comment",
+              "findings": [
+                {
+                  "file": "path/to/file",
+                  "line": 42,
+                  "severity": "critical",
+                  "description": "Issue description",
+                  "suggestion": "How to fix"
+                }
+              ]
+            }
+            `;
+
+            // Call Claude API (simplified - in production use SDK)
+            const response = await fetch('https://api.anthropic.com/v1/messages', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': process.env.ANTHROPIC_API_KEY,
+                'anthropic-version': '2023-06-01'
+              },
+              body: JSON.stringify({
+                model: 'claude-sonnet-4-20250514',
+                max_tokens: 4096,
+                messages: [{
+                  role: 'user',
+                  content: `${REVIEW_CRITERIA}\n\n## Code Diff:\n\`\`\`diff\n${diffContent.substring(0, 50000)}\n\`\`\``
+                }]
+              })
+            });
+
+            if (!response.ok) {
+              console.log('API Error:', await response.text());
+              // Post a comment that review failed
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: '⚠️ AI Code Review could not be completed. Please configure ANTHROPIC_API_KEY secret.'
+              });
+              return;
+            }
+
+            const data = await response.json();
+            const reviewText = data.content[0].text;
+
+            // Try to parse JSON response
+            let review;
+            try {
+              const jsonMatch = reviewText.match(/\{[\s\S]*\}/);
+              review = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+            } catch (e) {
+              review = null;
+            }
+
+            // Format the review comment
+            let comment = '## 🤖 AI Code Review\n\n';
+
+            if (review) {
+              comment += `### Summary\n${review.summary}\n\n`;
+
+              if (review.findings && review.findings.length > 0) {
+                comment += '### Findings\n\n';
+                for (const finding of review.findings) {
+                  const emoji = finding.severity === 'critical' ? '🔴' :
+                                finding.severity === 'warning' ? '🟡' : '🔵';
+                  comment += `${emoji} **${finding.severity.toUpperCase()}** - \`${finding.file}\``;
+                  if (finding.line) comment += `:${finding.line}`;
+                  comment += `\n${finding.description}\n`;
+                  if (finding.suggestion) {
+                    comment += `> 💡 ${finding.suggestion}\n`;
+                  }
+                  comment += '\n';
+                }
+              } else {
+                comment += '✅ No issues found!\n';
+              }
+
+              const verdictEmoji = review.verdict === 'approve' ? '✅' :
+                                   review.verdict === 'request_changes' ? '❌' : '💬';
+              comment += `\n### Verdict: ${verdictEmoji} ${review.verdict.toUpperCase()}\n`;
+            } else {
+              comment += reviewText;
+            }
+
+            comment += '\n---\n*Generated by AI Code Review Agent*';
+
+            // Post the review comment
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: comment
+            });
+
+      - name: Skip review notification
+        if: steps.changed-files.outputs.any_changed != 'true'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            console.log('No TypeScript/JavaScript files changed, skipping AI review');

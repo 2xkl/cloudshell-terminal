@@ -43,12 +43,19 @@
 
 | Endpoint | Tests | Status | Priority |
 |----------|-------|--------|----------|
-| POST /api/auth/login | 0 | TODO | Critical |
-| GET /api/auth/me | 0 | TODO | Critical |
-| CRUD /api/terminals | 0 | TODO | Critical |
-| POST /api/terminals/:id/execute | 0 | TODO | Critical |
-| CRUD /api/snapshots | 0 | TODO | High |
-| POST /api/snapshots/:id/restore | 0 | TODO | High |
+| POST /api/auth/login | 4 | PASS | Critical |
+| GET /api/auth/me | 3 | PASS | Critical |
+| POST /api/auth/logout | 1 | PASS | Low |
+| GET /api/terminals | 2 | PASS | Critical |
+| POST /api/terminals | 3 | PASS | Critical |
+| GET /api/terminals/:id | 2 | PASS | High |
+| POST /api/terminals/:id/execute | 5 | PASS | Critical |
+| DELETE /api/terminals/:id | 2 | PASS | High |
+| GET /api/snapshots | 2 | PASS | High |
+| POST /api/snapshots | 4 | PASS | High |
+| GET /api/snapshots/:id | 2 | PASS | High |
+| POST /api/snapshots/:id/restore | 2 | PASS | High |
+| DELETE /api/snapshots/:id | 2 | PASS | High |
 | CRUD /api/users | 0 | TODO | Medium |
 | GET /api/roles | 0 | TODO | Low |
 
@@ -64,15 +71,18 @@
 | Snapshots.tsx | 0 | TODO | Medium |
 | Users.tsx | 0 | TODO | Low |
 
-### E2E Tests
+### E2E Tests (Playwright)
 
 | Flow | Tests | Status | Priority |
 |------|-------|--------|----------|
-| Login → Dashboard | 0 | TODO | Critical |
-| Create Terminal → Execute Commands | 0 | TODO | Critical |
-| Create Snapshot → Restore | 0 | TODO | High |
-| Admin: Manage Users | 0 | TODO | Medium |
-| RBAC: Permission Denied | 0 | TODO | High |
+| Login with credentials | 6 | PASS | Critical |
+| Terminals CRUD | 6 | PASS | Critical |
+| Execute commands | 3 | PASS | Critical |
+| Create/Restore Snapshot | 4 | PASS | High |
+| RBAC: Viewer restrictions | 3 | PASS | High |
+| RBAC: Operator permissions | 3 | PASS | High |
+| RBAC: Admin full access | 3 | PASS | High |
+| Protected routes | 3 | PASS | High |
 
 ## Test Commands
 
@@ -99,10 +109,10 @@ npx playwright test
 | Type | Current | Target |
 |------|---------|--------|
 | Backend Unit | ~30% | 80% |
-| Backend Integration | 0% | 70% |
+| Backend Integration | ~60% | 70% |
 | Frontend Unit | ~10% | 60% |
-| Frontend Component | 0% | 50% |
-| E2E Critical Paths | 0% | 95% |
+| Frontend Component | ~40% | 50% |
+| E2E Critical Paths | ~80% | 95% |
 
 ## Risk Matrix
 
