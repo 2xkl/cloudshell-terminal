@@ -45,4 +45,4 @@ has_background_jobs: false
 | Well-documented | PASS - All components |
 
 ## Verdict: READY
-Stack spełnia wszystkie quality gates dla pracy z agentem AI.
+Stack meets all quality gates for AI agent collaboration.

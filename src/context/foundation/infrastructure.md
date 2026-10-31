@@ -198,93 +198,52 @@ All services communicate over Docker bridge network `cloudshell-network`:
 | PostgreSQL | `pg_isready -U cloudshell` | 5s |
 | Redis | `redis-cli ping` | 5s |
 
-## Production Deployment: Railway (Free Tier)
+## Production Deployment: Render (Free Tier)
 
-Railway oferuje $5/miesiąc kredytu za darmo - wystarczy na projekt certyfikacyjny.
+Render offers a free tier with PostgreSQL (90 days) and web services.
 
-### Krok 1: Utwórz projekt na Railway
+### Quick Deploy with Blueprint
 
-1. Wejdź na https://railway.app i zaloguj się przez GitHub
-2. Kliknij **"New Project"** → **"Deploy from GitHub repo"**
-3. Wybierz repozytorium `przeprogramowani`
+1. Go to https://render.com and sign up with GitHub
+2. Click **New** → **Blueprint**
+3. Connect your repository
+4. Render will detect `render.yaml` and create all services
+5. Click **Apply**
 
-### Krok 2: Dodaj PostgreSQL
+### Services Created
 
-1. W projekcie kliknij **"+ New"** → **"Database"** → **"PostgreSQL"**
-2. Railway automatycznie utworzy zmienną `DATABASE_URL`
+- **cloudshell-db**: PostgreSQL database (free tier)
+- **cloudshell-backend**: Node.js API server (free tier, sleeps after 15 min)
+- **cloudshell-frontend**: Static site (free tier)
 
-### Krok 3: Wdróż Backend
+### Environment Variables
 
-1. Kliknij **"+ New"** → **"GitHub Repo"** → wybierz repo
-2. W ustawieniach serwisu:
-   - **Root Directory**: `src/backend`
-   - **Build Command**: (Railway użyje Dockerfile)
-3. Dodaj zmienne środowiskowe:
-   ```
-   JWT_SECRET=your_secure_random_string_here
-   NODE_ENV=production
-   ```
-4. Railway automatycznie połączy `DATABASE_URL` z PostgreSQL
-5. Po deployu skopiuj URL backendu (np. `https://cloudshell-backend-xxx.up.railway.app`)
+Backend (auto-configured):
+- `DATABASE_URL` - Connected to PostgreSQL
+- `JWT_SECRET` - Auto-generated
+- `NODE_ENV` - production
 
-### Krok 4: Wdróż Frontend
+Frontend:
+- `VITE_API_URL` - Update to backend URL after deploy
 
-1. Kliknij **"+ New"** → **"GitHub Repo"** → wybierz repo
-2. W ustawieniach serwisu:
-   - **Root Directory**: `src/frontend`
-3. Dodaj zmienną środowiskową:
-   ```
-   VITE_API_URL=https://cloudshell-backend-xxx.up.railway.app
-   ```
-   (użyj URL backendu z kroku 3)
+### Post-Deploy Steps
 
-### Krok 5: Uruchom migracje i seed
+1. Copy backend URL (e.g., `https://cloudshell-backend-xxxx.onrender.com`)
+2. Update frontend `VITE_API_URL` environment variable
+3. Trigger frontend redeploy
 
-W terminalu Railway (Backend service → "Connect" → "Railway CLI"):
-```bash
-npx prisma db push
-npx tsx prisma/seed.ts
-```
+### Access
 
-Lub przez Railway CLI lokalnie:
-```bash
-npm install -g @railway/cli
-railway login
-railway link
-railway run -s backend npx prisma db push
-railway run -s backend npx tsx prisma/seed.ts
-```
+- Frontend: `https://cloudshell-frontend-xxxx.onrender.com`
+- Backend API: `https://cloudshell-backend-xxxx.onrender.com`
 
-### Krok 6: Wygeneruj domeny publiczne
+### Default Users (seeded automatically)
 
-1. Backend: Settings → Networking → Generate Domain
-2. Frontend: Settings → Networking → Generate Domain
-
-### Gotowe!
-
-Twoja aplikacja jest dostępna pod publicznym URL:
-- Frontend: `https://cloudshell-frontend-xxx.up.railway.app`
-- Backend API: `https://cloudshell-backend-xxx.up.railway.app`
-
-### Railway CLI (alternatywa)
-
-```bash
-# Instalacja
-npm install -g @railway/cli
-
-# Logowanie
-railway login
-
-# Inicjalizacja w repozytorium
-cd /path/to/przeprogramowani
-railway init
-
-# Linkowanie do istniejącego projektu
-railway link
-
-# Deploy
-railway up
-```
+| Email | Password | Role |
+|-------|----------|------|
+| admin@cloudshell.local | admin123 | admin |
+| operator@cloudshell.local | operator123 | operator |
+| viewer@cloudshell.local | viewer123 | viewer |
 
 ## Troubleshooting
 
