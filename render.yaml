@@ -30,7 +30,6 @@ services:
   - type: web
     name: cloudshell-frontend
     runtime: static
-    plan: free
     rootDir: src/frontend
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
