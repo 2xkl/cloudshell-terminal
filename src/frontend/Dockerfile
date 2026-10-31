@@ -1,14 +1,24 @@
-FROM node:20-alpine
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
 # Install dependencies
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 
-# Copy source
+# Copy source and build
 COPY . .
+RUN npm run build
+
+# Production image - serve static files
+FROM node:22-alpine AS runner
+
+WORKDIR /app
+
+RUN npm install -g serve
+
+COPY --from=builder /app/dist ./dist
 
 EXPOSE 3000
 
-CMD ["npm", "run", "dev"]
+CMD ["serve", "-s", "dist", "-l", "3000"]
