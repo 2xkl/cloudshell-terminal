@@ -13,7 +13,7 @@ services:
     region: frankfurt
     plan: free
     rootDir: src/backend
-    buildCommand: npm ci --include=dev && npx prisma generate && npm run build
+    buildCommand: npm ci --include=dev && npx prisma generate && npm run build && npx prisma db push && npx tsx prisma/seed.ts
     startCommand: npm run start
     healthCheckPath: /health
     envVars:
