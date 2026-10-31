@@ -75,15 +75,21 @@ describe('Snapshots API Integration Tests', () => {
 
       expect(response.status).toBe(201);
       expect(response.body).toHaveProperty('name', 'Test Snapshot');
-      expect(response.body).toHaveProperty('terminalId', terminalId);
-      expect(response.body).toHaveProperty('state');
+      expect(response.body.terminal).toHaveProperty('id', terminalId);
     });
 
-    it('operator should create snapshot', async () => {
+    it('operator should create snapshot for own terminal', async () => {
+      // Create terminal as operator
+      const terminalResponse = await request(app)
+        .post('/api/terminals')
+        .set('Authorization', `Bearer ${operatorToken}`)
+        .send({ name: 'Operator Terminal' });
+      const operatorTerminalId = terminalResponse.body.id;
+
       const response = await request(app)
         .post('/api/snapshots')
         .set('Authorization', `Bearer ${operatorToken}`)
-        .send({ name: 'Operator Snapshot', terminalId });
+        .send({ name: 'Operator Snapshot', terminalId: operatorTerminalId });
 
       expect(response.status).toBe(201);
       expect(response.body).toHaveProperty('name', 'Operator Snapshot');
@@ -111,14 +117,21 @@ describe('Snapshots API Integration Tests', () => {
         .send({ command: 'cd testdir' });
 
       // Create snapshot
-      const response = await request(app)
+      const createResponse = await request(app)
         .post('/api/snapshots')
         .set('Authorization', `Bearer ${adminToken}`)
         .send({ name: 'State Snapshot', terminalId });
 
-      expect(response.status).toBe(201);
-      const state = JSON.parse(response.body.state);
-      expect(state).toHaveProperty('workingDir', '/home/user/testdir');
+      expect(createResponse.status).toBe(201);
+      const snapshotId = createResponse.body.id;
+
+      // GET snapshot to retrieve state
+      const getResponse = await request(app)
+        .get(`/api/snapshots/${snapshotId}`)
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(getResponse.status).toBe(200);
+      expect(getResponse.body.state).toHaveProperty('workingDir', '/home/user/testdir');
     });
   });
 
