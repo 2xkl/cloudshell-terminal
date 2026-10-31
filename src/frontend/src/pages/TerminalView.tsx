@@ -50,6 +50,8 @@ export function TerminalView() {
         },
       ]);
       queryClient.invalidateQueries({ queryKey: ['terminal', id] });
+      // Restore focus after command execution
+      setTimeout(() => inputRef.current?.focus(), 0);
     },
   });
 
@@ -69,6 +71,9 @@ export function TerminalView() {
     executeMutation.mutate(command);
     setCommand('');
     setHistoryIndex(-1);
+
+    // Keep focus on input after submitting
+    setTimeout(() => inputRef.current?.focus(), 0);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
