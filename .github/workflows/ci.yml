@@ -57,9 +57,13 @@ jobs:
         env:
           HUSKY: 0
 
-      - name: Run tests
+      - name: Run backend unit tests
         working-directory: src
-        run: npm test
+        run: npm run test:backend:unit
+
+      - name: Run frontend tests
+        working-directory: src
+        run: npm run test:frontend
 
   build:
     name: Build
