@@ -45,27 +45,15 @@ const DEFAULT_ENVIRONMENT: Record<string, string> = {
 };
 
 /**
- * Validates and normalizes a filesystem path
- * @param path - The path to validate
- * @returns Normalized path or null if invalid
+ * Sanitizes user input for terminal commands
+ * Prevents potential issues with special characters
  */
-export function normalizePath(path: string): string | null {
-  if (!path || typeof path !== 'string') {
-    return null;
+export function sanitizeInput(input: string): string {
+  if (!input || typeof input !== 'string') {
+    return '';
   }
-
-  // Remove trailing slashes (except for root)
-  let normalized = path.replace(/\/+$/, '') || '/';
-
-  // Handle double slashes
-  normalized = normalized.replace(/\/+/g, '/');
-
-  // Must start with /
-  if (!normalized.startsWith('/')) {
-    return null;
-  }
-
-  return normalized;
+  // Remove control characters except newline and tab
+  return input.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
 }
 
 export function getDefaultState(): TerminalState {
