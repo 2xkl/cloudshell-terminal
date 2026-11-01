@@ -44,6 +44,18 @@ const DEFAULT_ENVIRONMENT: Record<string, string> = {
   LANG: 'en_US.UTF-8',
 };
 
+/**
+ * Sanitizes user input for terminal commands
+ * Prevents potential issues with special characters
+ */
+export function sanitizeInput(input: string): string {
+  if (!input || typeof input !== 'string') {
+    return '';
+  }
+  // Remove control characters except newline and tab
+  return input.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+}
+
 export function getDefaultState(): TerminalState {
   return {
     workingDir: '/home/user',
